@@ -19,6 +19,7 @@ export default class App extends React.Component<{ store: Store }> {
       <Root
         player={{
           flvPlayer: this.props.store.flvPlayer,
+          hlsPlayer: this.props.store.hlsPlayer,
           onStop: this.onStop,
         }}
       />

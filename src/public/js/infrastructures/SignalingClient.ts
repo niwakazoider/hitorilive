@@ -1,6 +1,7 @@
 import debug from 'debug';
 const log = debug('hitorilive:SignalingClient');
 import flvJS from 'flv.js';
+import Hls from 'hls.js';
 import { ConnectableObservable, Observable, Subject, Subscription } from 'rxjs';
 import Peer from 'simple-peer';
 import { ServerSignalingMessage } from '../../../commons/types';
@@ -8,9 +9,11 @@ import connectPeersClient from '../../../libraries/peerconnection/connectPeersCl
 import ObservableLoader from './ObservableLoader';
 
 export type FLVPlayer = ReturnType<typeof flvJS.createPlayer>;
+export type HLSPlayer = ReturnType<typeof Hls>;
 
 export default class SignalingClient {
   readonly flvPlayer: FLVPlayer;
+  readonly hlsPlayer: HLSPlayer;
   private readonly replayableHeaders: ConnectableObservable<ArrayBuffer>;
   private readonly replayableHeadersSubscription: Subscription;
   private publishedUpstream?: ConnectableObservable<ArrayBuffer>;
@@ -63,6 +66,7 @@ export default class SignalingClient {
         customLoader,
       },
     );
+    this.hlsPlayer = new Hls();
 
     // Probably no error is thrown after opening.
     signalingWebSocket.onerror = (ev) => {

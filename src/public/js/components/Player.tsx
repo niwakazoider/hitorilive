@@ -1,4 +1,5 @@
 import flvJS from 'flv.js';
+import Hls from 'hls.js';
 import React, { CSSProperties, WheelEvent } from 'react';
 import styled from 'styled-components';
 import VolumeIndicator from './VolumeIndicator';
@@ -28,6 +29,7 @@ export interface Props {
   };
 
   flvPlayer?: ReturnType<typeof flvJS.createPlayer>;
+  hlsPlayer?: ReturnType<typeof Hls>;
 
   onStop(): void;
 }
@@ -52,7 +54,11 @@ export default class Player extends React.Component<Props, typeof initialState> 
     const video = this.videoRef.current!;
     video.volume = this.state.volumePercent / 100;
     if (prevProps.flvPlayer !== this.props.flvPlayer && this.props.flvPlayer != null) {
-      play(video, this.props.flvPlayer)
+      playFlv(video, this.props.flvPlayer)
+        .catch((e) => { console.error(e.message, e.stack || e); });
+    }
+    if (prevProps.hlsPlayer !== this.props.hlsPlayer && this.props.hlsPlayer != null) {
+      playHls(video, this.props.hlsPlayer)
         .catch((e) => { console.error(e.message, e.stack || e); });
     }
   }
@@ -116,7 +122,7 @@ export default class Player extends React.Component<Props, typeof initialState> 
   }
 }
 
-async function play(element: HTMLVideoElement, flvPlayer: ReturnType<typeof flvJS.createPlayer>) {
+async function playFlv(element: HTMLVideoElement, flvPlayer: ReturnType<typeof flvJS.createPlayer>) {
   flvPlayer.attachMediaElement(element);
   flvPlayer.load();
   await Promise.all([
@@ -126,6 +132,20 @@ async function play(element: HTMLVideoElement, flvPlayer: ReturnType<typeof flvJ
     }),
   ]);
   flvPlayer.destroy();
+}
+
+async function playHls(element: HTMLVideoElement, hlsPlayer: ReturnType<typeof Hls>) {
+  hlsPlayer.attachMedia(element);
+  hlsPlayer.loadSource(element.src);
+  hls.on(Hls.Events.MANIFEST_PARSED,function() {
+    element.play();
+  });
+  await Promise.all([
+    new Promise((resolve, reject) => {
+      hlsPlayer.on(Hls.Events.MEDIA_DETACHED, resolve);
+    }),
+  ]);
+  hlsPlayer.destroy();
 }
 
 function addVolumeByWheel(currentVolumePercent: number, platform: string, deltaY: number) {

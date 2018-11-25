@@ -1,10 +1,12 @@
 import flvJS from 'flv.js';
+import Hls from 'hls.js';
 import React from 'react';
 import Player from './Player';
 
 export interface Props {
   player: {
     flvPlayer?: ReturnType<typeof flvJS.createPlayer>;
+    hlsPlayer?: ReturnType<typeof Hls>;
     onStop(): void;
   };
 }
